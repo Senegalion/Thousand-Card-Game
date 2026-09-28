@@ -1,0 +1,893 @@
+openapi: 3.1.0
+info:
+  title: Thousand Online API
+  version: 1.0.0
+  description: |
+    REST API of Thousand Online, a server-authoritative implementation of the Polish card game
+    Tysiąc (Kurnik rules) for 2–4 players.
+
+    Authentication: server-side session cookie `SESSION` (HttpOnly, Secure, SameSite=Strict), see ADR-003.
+    CSRF: every mutating request must send the `X-XSRF-TOKEN` header with the value of the `XSRF-TOKEN` cookie.
+    Realtime gameplay (actions and per-player views) uses STOMP over WebSocket at `/ws` and is
+    specified in `websocket.md`; the REST `GET /matches/{matchId}/view` returns the same PlayerView.
+    Error messages are machine codes; the Polish UI maps codes to text.
+
+servers:
+  - url: http://localhost:8080/api
+    description: Development
+  - url: https://thousand.example.com/api
+    description: Production (domain decided in Build)
+
+tags:
+  - name: auth
+    description: Registration, login, logout, password reset
+  - name: account
+    description: The authenticated user's own account
+  - name: tables
+    description: Private tables (lobby)
+  - name: matches
+    description: Match views and history
+  - name: system
+    description: Health
+
+security:
+  - sessionCookie: []
+
+paths:
+  /auth/csrf:
+    get:
+      tags: [auth]
+      summary: Obtain a CSRF token cookie
+      description: Sets the `XSRF-TOKEN` cookie for the SPA. Needed before the first mutating request.
+      operationId: getCsrfToken
+      security: []
+      responses:
+        '204':
+          description: Cookie set
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new account and start a session (US-001)
+      operationId: register
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created; session cookie set
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in with email and password (US-002)
+      operationId: login
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated; session cookie set
+          headers:
+            Set-Cookie:
+              $ref: '#/components/headers/SessionCookie'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid credentials (generic; does not reveal whether the email exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Log out and invalidate the current session (US-002 AC-4)
+      operationId: logout
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      responses:
+        '204':
+          description: Session invalidated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/password-reset/request:
+    post:
+      tags: [auth]
+      summary: Request a password reset email (US-003)
+      description: Always returns 202, whether or not the email is registered (no account enumeration, A-04).
+      operationId: requestPasswordReset
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '202':
+          description: Accepted; an email is sent if the account exists
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/password-reset/confirm:
+    post:
+      tags: [auth]
+      summary: Set a new password using a reset token (US-003)
+      description: On success, all existing sessions of the user are invalidated (A-03).
+      operationId: confirmPasswordReset
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+      responses:
+        '204':
+          description: Password changed
+        '400':
+          description: Token invalid, expired or already used, or password violates policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /me:
+    get:
+      tags: [account]
+      summary: Get my account (US-002)
+      operationId: getMe
+      responses:
+        '200':
+          description: The authenticated account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags: [account]
+      summary: Permanently delete my account (US-004)
+      description: |
+        Requires the current password (A-14). Rejected with 409 while seated at an active table or match.
+        Removes email, username and password hash, deletes all sessions and reset tokens, and anonymizes
+        the user in shared match history ("Deleted player").
+      operationId: deleteMe
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '204':
+          description: Account deleted; session cookie cleared
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Password confirmation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User is seated at an active table or match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /me/current:
+    get:
+      tags: [account]
+      summary: My current table or match, if any (US-010, US-023)
+      description: Used on app start to resume a table or reconnect to a match, and to decide the empty state.
+      operationId: getMyCurrentActivity
+      responses:
+        '200':
+          description: Current activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentActivity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/matches:
+    get:
+      tags: [matches]
+      summary: My match history, newest first (US-025)
+      operationId: listMyMatches
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of my finished matches
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchHistoryPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tables:
+    post:
+      tags: [tables]
+      summary: Create a private table (US-006)
+      operationId: createTable
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTableRequest'
+      responses:
+        '201':
+          description: Table created with the caller seated as host
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Caller is already seated elsewhere (A-10), or the player count is not yet available (unverified rules, ADR-006)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tables/available-player-counts:
+    get:
+      tags: [tables]
+      summary: Player counts whose rule configuration is complete (ADR-006)
+      operationId: getAvailablePlayerCounts
+      responses:
+        '200':
+          description: Available player counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playerCounts:
+                    type: array
+                    items:
+                      type: integer
+                      enum: [2, 3, 4]
+                required: [playerCounts]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tables/{joinCode}:
+    parameters:
+      - $ref: '#/components/parameters/JoinCode'
+    get:
+      tags: [tables]
+      summary: View a table by its join code (US-007 invite link flow)
+      operationId: getTable
+      responses:
+        '200':
+          description: Table with seats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tables/{joinCode}/join:
+    parameters:
+      - $ref: '#/components/parameters/JoinCode'
+    post:
+      tags: [tables]
+      summary: Join a table (US-007)
+      operationId: joinTable
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      responses:
+        '200':
+          description: Seated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Table full (TABLE_FULL), already seated elsewhere (ALREADY_SEATED) or table not open
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tables/{joinCode}/leave:
+    parameters:
+      - $ref: '#/components/parameters/JoinCode'
+    post:
+      tags: [tables]
+      summary: Leave an unstarted table (US-009); host leaving closes it (A-15)
+      operationId: leaveTable
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      responses:
+        '204':
+          description: Left (or table closed if caller was host)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Match already started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tables/{joinCode}/start:
+    parameters:
+      - $ref: '#/components/parameters/JoinCode'
+    post:
+      tags: [tables]
+      summary: Start the match (US-008); host only, table must be full
+      operationId: startMatch
+      parameters:
+        - $ref: '#/components/parameters/XsrfHeader'
+      responses:
+        '201':
+          description: Match started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchStarted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Seats not all filled (TABLE_NOT_FULL) or already started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /matches/{matchId}/view:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [matches]
+      summary: My personalized view of a live match (US-011 AC-4, US-023)
+      description: Same payload as the STOMP `/user/queue/matches/{matchId}/view` message. Participants only.
+      operationId: getMatchView
+      responses:
+        '200':
+          description: PlayerView for the caller's seat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /matches/{matchId}:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [matches]
+      summary: Finished match summary (US-025); participants only
+      operationId: getMatchSummary
+      responses:
+        '200':
+          description: Match summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /health:
+    get:
+      tags: [system]
+      summary: Liveness for smoke checks (US-027)
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: Application is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [UP]
+                required: [status]
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: SESSION
+
+  headers:
+    SessionCookie:
+      description: '`SESSION=<id>; Path=/; Secure; HttpOnly; SameSite=Strict`'
+      schema:
+        type: string
+
+  parameters:
+    XsrfHeader:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      description: Value of the `XSRF-TOKEN` cookie (CSRF protection)
+      schema:
+        type: string
+    JoinCode:
+      name: joinCode
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[A-HJ-NP-Z2-9]{8}$'
+        description: 8 characters, unambiguous alphabet (no 0/O/1/I), ~40 bits of entropy; rate-limited lookups (A-07)
+    MatchId:
+      name: matchId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[A-Za-z0-9_ąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+$'
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: No composition rules (A-01)
+      required: [email, username, password]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          maxLength: 128
+      required: [email, password]
+
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    PasswordResetConfirm:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 43
+          maxLength: 64
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required: [token, newPassword]
+
+    DeleteAccountRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 128
+      required: [currentPassword]
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, email, username, createdAt]
+
+    PlayerRef:
+      description: Public identity of a participant. `userId` and `username` are null for a deleted account ("Deleted player").
+      type: object
+      properties:
+        userId:
+          type: [string, 'null']
+          format: uuid
+        username:
+          type: [string, 'null']
+        deleted:
+          type: boolean
+      required: [userId, username, deleted]
+
+    CreateTableRequest:
+      type: object
+      properties:
+        playerCount:
+          type: integer
+          enum: [2, 3, 4]
+      required: [playerCount]
+
+    Seat:
+      type: object
+      properties:
+        seatIndex:
+          type: integer
+          minimum: 0
+          maximum: 3
+        player:
+          oneOf:
+            - $ref: '#/components/schemas/PlayerRef'
+            - type: 'null'
+        host:
+          type: boolean
+      required: [seatIndex, player, host]
+
+    Table:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        joinCode:
+          type: string
+        inviteUrl:
+          type: string
+          format: uri
+        playerCount:
+          type: integer
+          enum: [2, 3, 4]
+        status:
+          type: string
+          enum: [OPEN, IN_MATCH, CLOSED]
+        seats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Seat'
+        matchId:
+          type: [string, 'null']
+          format: uuid
+      required: [id, joinCode, inviteUrl, playerCount, status, seats, matchId]
+
+    MatchStarted:
+      type: object
+      properties:
+        matchId:
+          type: string
+          format: uuid
+      required: [matchId]
+
+    CurrentActivity:
+      type: object
+      properties:
+        table:
+          oneOf:
+            - $ref: '#/components/schemas/Table'
+            - type: 'null'
+        matchId:
+          type: [string, 'null']
+          format: uuid
+      required: [table, matchId]
+
+    Card:
+      type: object
+      properties:
+        suit:
+          type: string
+          enum: [SPADES, CLUBS, DIAMONDS, HEARTS]
+        rank:
+          type: string
+          enum: [NINE, JACK, QUEEN, KING, TEN, ACE]
+      required: [suit, rank]
+
+    PlayerView:
+      description: |
+        Personalized, authoritative view for one seat. Contains only the caller's own hand and public
+        information; never other hands, an unrevealed musik, or face-down discards (hidden information).
+        Full structure is defined in websocket.md; key fields listed here.
+      type: object
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+          description: Monotonic state version; actions must send it as expectedVersion
+        playerCount:
+          type: integer
+          enum: [2, 3, 4]
+        mySeat:
+          type: integer
+        phase:
+          type: string
+          enum: [BIDDING, MUSIK, CONTRACT, TRICKS, ROUND_SCORED, GAME_OVER]
+        myHand:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        revealedMusik:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+        seats:
+          type: array
+          items:
+            type: object
+            properties:
+              seatIndex:
+                type: integer
+              player:
+                $ref: '#/components/schemas/PlayerRef'
+              cardCount:
+                type: integer
+              gameScore:
+                type: integer
+              onBarrel:
+                type: boolean
+              connected:
+                type: boolean
+              graceDeadline:
+                type: [string, 'null']
+                format: date-time
+              sittingOut:
+                type: boolean
+            required: [seatIndex, player, cardCount, gameScore, onBarrel, connected, graceDeadline, sittingOut]
+        dealerSeat:
+          type: integer
+        currentTurnSeat:
+          type: [integer, 'null']
+        turnDeadline:
+          type: [string, 'null']
+          format: date-time
+        highestBid:
+          type: [integer, 'null']
+        declarerSeat:
+          type: [integer, 'null']
+        contract:
+          type: [integer, 'null']
+        trump:
+          type: [string, 'null']
+          enum: [SPADES, CLUBS, DIAMONDS, HEARTS, null]
+        currentTrick:
+          type: array
+          items:
+            type: object
+            properties:
+              seatIndex:
+                type: integer
+              card:
+                $ref: '#/components/schemas/Card'
+            required: [seatIndex, card]
+        legalActions:
+          type: array
+          description: Server-computed actions the caller may take now (UX hint only; server re-validates)
+          items:
+            type: string
+      required: [matchId, version, playerCount, mySeat, phase, myHand, seats, dealerSeat, currentTurnSeat, legalActions]
+
+    MatchStatus:
+      type: string
+      enum: [COMPLETED, FORFEIT, ABANDONED]
+
+    MatchSummary:
+      type: object
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        playerCount:
+          type: integer
+          enum: [2, 3, 4]
+        status:
+          $ref: '#/components/schemas/MatchStatus'
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              seatIndex:
+                type: integer
+              player:
+                $ref: '#/components/schemas/PlayerRef'
+              finalScore:
+                type: [integer, 'null']
+              outcome:
+                type: string
+                enum: [WIN, LOSS, DRAW, FORFEITED, WIN_BY_FORFEIT, ABANDONED]
+            required: [seatIndex, player, finalScore, outcome]
+      required: [matchId, playerCount, status, startedAt, endedAt, participants]
+
+    MatchHistoryPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchSummary'
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+      required: [items, page, limit, total]
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Stable machine code, e.g. EMAIL_UNAVAILABLE, USERNAME_UNAVAILABLE, PASSWORD_POLICY, INVALID_CREDENTIALS, TABLE_FULL, TABLE_NOT_FOUND, ALREADY_SEATED, TABLE_NOT_FULL, NOT_HOST, SEATED_CANNOT_DELETE, RESET_TOKEN_INVALID, RATE_LIMITED, PLAYER_COUNT_UNAVAILABLE
+        message:
+          type: string
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+            required: [field, code]
+      required: [code, message]
+
+  responses:
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Not authenticated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Authenticated but not allowed (not a participant / not host / CSRF failure)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict (e.g. email or username unavailable)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
