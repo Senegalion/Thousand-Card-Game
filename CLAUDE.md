@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Thousand Online
 
 ## Project
