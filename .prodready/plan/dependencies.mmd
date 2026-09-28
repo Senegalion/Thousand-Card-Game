@@ -1,0 +1,274 @@
+flowchart TD
+    subgraph S1[Sprint 1]
+        TASK001["TASK-001: Align backend skeleton with accepted stack and modules"]
+        TASK002["TASK-002: Architecture rules: module boundaries and pure game domain"]
+        TASK003["TASK-003: Flyway baseline migrations and jOOQ codegen"]
+        TASK004["TASK-004: Kurnik verification harness and evidence template"]
+        TASK005["TASK-005: Kurnik verification: auction and final contract (C-04, C-07)"]
+        TASK006["TASK-006: Kurnik verification: trick obligations and marriage timing (C-12, C-13)"]
+        TASK007["TASK-007: Kurnik verification: 4-player setup and 2-player musik (C-01, C-02, C-05, C-06)"]
+    end
+    subgraph S2[Sprint 2]
+        TASK008["TASK-008: Kurnik verification: bomb (C-08, C-09, C-10, C-11)"]
+        TASK009["TASK-009: Kurnik verification: redeal, negative scores, sit-out on barrel (C-03, R-085, R-103)"]
+        TASK010["TASK-010: Shared REST error model and validation"]
+        TASK011["TASK-011: Security foundation: Spring Session JDBC, CSRF, cookie policy"]
+        TASK012["TASK-012: Registration API: create account"]
+        TASK013["TASK-013: SPA foundation: routing, API client with CSRF, Polish strings, auth store"]
+    end
+    subgraph S3[Sprint 3]
+        TASK014["TASK-014: Register page (walking skeleton UI → API → DB)"]
+        TASK015["TASK-015: CI quality gates: tests, coverage gate, dependency and security scanning"]
+        TASK016["TASK-016: Game domain: cards, deck, strength, points, marriage values"]
+        TASK017["TASK-017: Game domain: VariantConfig and fail-fast on unverified rules"]
+        TASK018["TASK-018: Game domain: dealing for 2p/3p and dealer rotation"]
+        TASK019["TASK-019: Game domain: PlayerView projection and hidden information"]
+        TASK020["TASK-020: Health endpoint and separated management port"]
+    end
+    subgraph S4[Sprint 4]
+        TASK021["TASK-021: Game domain: GameEngine.apply, phases, turn and version handling"]
+        TASK022["TASK-022: Game domain: auction rules (R-030..R-033)"]
+        TASK023["TASK-023: Game domain: 3p musik, card passing and final contract"]
+        TASK024["TASK-024: Game domain: 2p musik choice and discard"]
+        TASK025["TASK-025: Game domain: first lead, follow suit, rejection leaves state unchanged"]
+        TASK026["TASK-026: Implement verified 2p unchosen-musik visibility (C-05)"]
+    end
+    subgraph S5[Sprint 5]
+        TASK027["TASK-027: Game domain: must beat and trick resolution"]
+        TASK028["TASK-028: Game domain: marriages and trump"]
+        TASK029["TASK-029: Game domain: contract result and defender rounding"]
+        TASK030["TASK-030: Game domain: 2p leftover musik points and barrel"]
+        TASK031["TASK-031: Game domain: end of game at 1000 and tie-break"]
+        TASK032["TASK-032: Registration: password policy and Argon2id storage"]
+    end
+    subgraph S6[Sprint 6]
+        TASK033["TASK-033: Game domain: legalActions query"]
+        TASK034["TASK-034: Implement verified auction options (C-04, C-07)"]
+        TASK035["TASK-035: Implement verified trick options (C-12, C-13)"]
+        TASK036["TASK-036: Implement verified 4-player variant: sitting out, deal, musik, sit-out scoring"]
+        TASK037["TASK-037: Implement bomb (R-050, R-051) with verified decision point (C-09)"]
+        TASK038["TASK-038: Implement verified bomb options (C-08, C-10, C-11)"]
+    end
+    subgraph S7[Sprint 7]
+        TASK039["TASK-039: Implement four-9s redeal with verified procedure (C-03)"]
+        TASK040["TASK-040: Implement verified scoring options (R-085, R-103)"]
+        TASK041["TASK-041: Timeout fallback (ADR-009): bidding, 2p musik choice, card play"]
+        TASK042["TASK-042: Timeout fallback (ADR-009): discard, card passing, contract, optional actions"]
+        TASK043["TASK-043: Login, logout and session invalidation"]
+        TASK044["TASK-044: Rate limiting on authentication endpoints"]
+    end
+    subgraph S8[Sprint 8]
+        TASK045["TASK-045: Password reset request and email"]
+        TASK046["TASK-046: Password reset confirmation and session revocation"]
+        TASK047["TASK-047: Mail retry and failure metric"]
+        TASK048["TASK-048: Retention job for expired reset tokens"]
+        TASK049["TASK-049: External accounts: domain, VPS, SMTP provider"]
+        TASK050["TASK-050: VPS hardening and Compose production stack"]
+        TASK051["TASK-051: Deploy workflow with smoke check and automatic rollback"]
+    end
+    subgraph S9[Sprint 9]
+        TASK052["TASK-052: Caddy HTTPS and routing"]
+        TASK053["TASK-053: Create private table and available player counts"]
+        TASK054["TASK-054: Account deletion: password confirmation and seated guard"]
+        TASK055["TASK-055: Join table by code: errors"]
+        TASK056["TASK-056: MatchStateStore: snapshot on start and per accepted action"]
+        TASK057["TASK-057: Match action pipeline: optimistic version and idempotency"]
+    end
+    subgraph S10[Sprint 10]
+        TASK058["TASK-058: Start match (host only, full table)"]
+        TASK059["TASK-059: Host leaving closes the table"]
+        TASK060["TASK-060: STOMP endpoint: cookie handshake, origin check, membership interceptor"]
+        TASK061["TASK-061: STOMP action handling and per-seat view push"]
+        TASK062["TASK-062: Realtime seat list updates"]
+        TASK063["TASK-063: REST view and current-activity endpoints"]
+        TASK064["TASK-064: Record match results and delete the snapshot at match end"]
+    end
+    subgraph S11[Sprint 11]
+        TASK065["TASK-065: Presence: disconnect marking and grace timer"]
+        TASK066["TASK-066: Restore live matches after restart"]
+        TASK067["TASK-067: Reconnect within the grace period"]
+        TASK068["TASK-068: Turn timers with automatic fallback moves"]
+        TASK069["TASK-069: Forfeit and abandonment after the grace period"]
+        TASK070["TASK-070: Statistics-eligible match query"]
+    end
+    subgraph S12[Sprint 12]
+        TASK071["TASK-071: Match history API"]
+        TASK072["TASK-072: Account deletion: anonymized shared history"]
+        TASK073["TASK-073: Login, logout, password reset pages"]
+        TASK074["TASK-074: Privacy policy page"]
+        TASK075["TASK-075: Account page with deletion"]
+        TASK076["TASK-076: Home, empty state, create and join forms"]
+    end
+    subgraph S13[Sprint 13]
+        TASK077["TASK-077: Table room and invite-link flow"]
+        TASK078["TASK-078: STOMP client service and reconnect banner"]
+        TASK079["TASK-079: Game table: layout, hand and trick play"]
+        TASK080["TASK-080: Game table: bidding and contract panels"]
+        TASK081["TASK-081: Game table: musik and card passing (2p, 3p)"]
+        TASK082["TASK-082: Game table: marriage toggle, bomb and redeal controls"]
+    end
+    subgraph S14[Sprint 14]
+        TASK083["TASK-083: Game table: timer, scoreboard, round summary, game over, event line"]
+        TASK084["TASK-084: Game table: 4-player layout and sitting-out seat"]
+        TASK085["TASK-085: Match history page"]
+        TASK086["TASK-086: E2E: complete 2-player match"]
+        TASK087["TASK-087: E2E: complete 3-player match"]
+        TASK088["TASK-088: E2E: complete 4-player match"]
+    end
+    subgraph S15[Sprint 15]
+        TASK089["TASK-089: Metrics in Prometheus and Grafana dashboards"]
+        TASK090["TASK-090: Structured logs to Loki via Alloy, secret masking"]
+        TASK091["TASK-091: Nightly PostgreSQL backup and tested restore"]
+        TASK092["TASK-092: Load test: p95 ≤ 200 ms at 50 users"]
+        TASK093["TASK-093: Tracing to Tempo (observability phase 2)"]
+    end
+    TASK001 --> TASK002
+    TASK001 --> TASK003
+    TASK004 --> TASK005
+    TASK004 --> TASK006
+    TASK004 --> TASK007
+    TASK004 --> TASK008
+    TASK004 --> TASK009
+    TASK001 --> TASK010
+    TASK003 --> TASK011
+    TASK010 --> TASK011
+    TASK011 --> TASK012
+    TASK013 --> TASK014
+    TASK012 --> TASK014
+    TASK001 --> TASK015
+    TASK002 --> TASK016
+    TASK016 --> TASK017
+    TASK017 --> TASK018
+    TASK018 --> TASK019
+    TASK011 --> TASK020
+    TASK019 --> TASK021
+    TASK021 --> TASK022
+    TASK022 --> TASK023
+    TASK022 --> TASK024
+    TASK023 --> TASK025
+    TASK024 --> TASK026
+    TASK007 --> TASK026
+    TASK025 --> TASK027
+    TASK027 --> TASK028
+    TASK028 --> TASK029
+    TASK029 --> TASK030
+    TASK024 --> TASK030
+    TASK030 --> TASK031
+    TASK012 --> TASK032
+    TASK031 --> TASK033
+    TASK022 --> TASK034
+    TASK023 --> TASK034
+    TASK005 --> TASK034
+    TASK028 --> TASK035
+    TASK006 --> TASK035
+    TASK030 --> TASK036
+    TASK007 --> TASK036
+    TASK029 --> TASK037
+    TASK008 --> TASK037
+    TASK037 --> TASK038
+    TASK036 --> TASK038
+    TASK018 --> TASK039
+    TASK021 --> TASK039
+    TASK009 --> TASK039
+    TASK030 --> TASK040
+    TASK036 --> TASK040
+    TASK009 --> TASK040
+    TASK033 --> TASK041
+    TASK041 --> TASK042
+    TASK023 --> TASK042
+    TASK024 --> TASK042
+    TASK012 --> TASK043
+    TASK043 --> TASK044
+    TASK043 --> TASK045
+    TASK045 --> TASK046
+    TASK045 --> TASK047
+    TASK045 --> TASK048
+    TASK049 --> TASK050
+    TASK050 --> TASK051
+    TASK015 --> TASK051
+    TASK020 --> TASK051
+    TASK051 --> TASK052
+    TASK043 --> TASK053
+    TASK017 --> TASK053
+    TASK043 --> TASK054
+    TASK053 --> TASK054
+    TASK053 --> TASK055
+    TASK003 --> TASK056
+    TASK021 --> TASK056
+    TASK056 --> TASK057
+    TASK055 --> TASK058
+    TASK056 --> TASK058
+    TASK018 --> TASK058
+    TASK055 --> TASK059
+    TASK011 --> TASK060
+    TASK058 --> TASK060
+    TASK060 --> TASK061
+    TASK057 --> TASK061
+    TASK060 --> TASK062
+    TASK059 --> TASK062
+    TASK061 --> TASK063
+    TASK057 --> TASK064
+    TASK031 --> TASK064
+    TASK061 --> TASK065
+    TASK057 --> TASK066
+    TASK065 --> TASK066
+    TASK065 --> TASK067
+    TASK061 --> TASK068
+    TASK042 --> TASK068
+    TASK065 --> TASK069
+    TASK064 --> TASK069
+    TASK064 --> TASK070
+    TASK064 --> TASK071
+    TASK054 --> TASK072
+    TASK071 --> TASK072
+    TASK014 --> TASK073
+    TASK046 --> TASK073
+    TASK013 --> TASK074
+    TASK073 --> TASK075
+    TASK054 --> TASK075
+    TASK073 --> TASK076
+    TASK053 --> TASK076
+    TASK063 --> TASK076
+    TASK076 --> TASK077
+    TASK062 --> TASK077
+    TASK013 --> TASK078
+    TASK061 --> TASK078
+    TASK078 --> TASK079
+    TASK079 --> TASK080
+    TASK079 --> TASK081
+    TASK080 --> TASK082
+    TASK037 --> TASK082
+    TASK039 --> TASK082
+    TASK079 --> TASK083
+    TASK079 --> TASK084
+    TASK036 --> TASK084
+    TASK073 --> TASK085
+    TASK071 --> TASK085
+    TASK081 --> TASK086
+    TASK083 --> TASK086
+    TASK082 --> TASK086
+    TASK077 --> TASK086
+    TASK034 --> TASK086
+    TASK035 --> TASK086
+    TASK026 --> TASK086
+    TASK038 --> TASK086
+    TASK040 --> TASK086
+    TASK068 --> TASK086
+    TASK071 --> TASK086
+    TASK086 --> TASK087
+    TASK087 --> TASK088
+    TASK084 --> TASK088
+    TASK052 --> TASK089
+    TASK061 --> TASK089
+    TASK089 --> TASK090
+    TASK051 --> TASK091
+    TASK061 --> TASK092
+    TASK068 --> TASK092
+    TASK052 --> TASK092
+    TASK090 --> TASK093
+    classDef verification fill:#EF4444,color:#fff
+    classDef kurnikBlocked fill:#F59E0B,color:#000
+    classDef critical stroke:#111,stroke-width:3px
+    class TASK005,TASK006,TASK007,TASK008,TASK009 verification
+    class TASK034,TASK037,TASK038,TASK026,TASK086,TASK087,TASK088,TASK082,TASK084,TASK036,TASK039,TASK040,TASK035 kurnikBlocked
+    class TASK001,TASK002,TASK016,TASK017,TASK018,TASK019,TASK021,TASK022,TASK023,TASK025,TASK027,TASK028,TASK029,TASK030,TASK031,TASK033,TASK041,TASK042,TASK068,TASK086,TASK087,TASK088 critical
