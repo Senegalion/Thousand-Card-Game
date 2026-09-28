@@ -18,6 +18,16 @@
         "@upstash/context7-mcp"
       ],
       "env": {}
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@microsoft/postgres-mcp",
+        "run"
+      ],
+      "env": {}
     }
   }
 }
