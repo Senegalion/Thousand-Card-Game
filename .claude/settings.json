@@ -1,4 +1,54 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(mvn *)",
+      "Bash(./mvnw *)",
+      "Read(**)",
+      "Edit(src/**)",
+      "Edit(tests/**)"
+    ],
+    "ask": [
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(**/*.key)",
+      "Read(**/*.pem)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./secrets/**)",
+      "Edit(**/*.key)",
+      "Edit(**/*.pem)",
+      "Edit(./.github/**)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "filesystem": {
+      "denyRead": [
+        "./.env",
+        "./.env.*",
+        "./secrets",
+        "**/*.key",
+        "**/*.pem"
+      ],
+      "denyWrite": [
+        "./.env",
+        "./.env.*",
+        "./secrets",
+        "**/*.key",
+        "**/*.pem",
+        "./.github"
+      ]
+    }
+  },
   "hooks": {
     "PreToolUse": [
       {
