@@ -10,7 +10,7 @@ Generated from the accepted Define and Design artifacts. Story-linked acceptance
 ## Sprint 1
 
 ### TASK-001: Align backend skeleton with accepted stack and modules
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready | **Owner**: dev
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done | **Owner**: dev
 
 **Description**:
 Set Java 25 in `backend/pom.xml`, remove Lombok (ADR-001), rename `room` → `lobby` and `player` → `user`, create `identity` and `match` module packages (pattern.md mapping). No behavior yet.
@@ -23,12 +23,12 @@ AC-2: Given the backend classes, when the architecture test runs, then no class 
 AC-3: Given the backend classes, when the architecture test runs, then every class resides in one of the modules identity, user, lobby, match, game or shared [technical]
 
 **TDD Tasks**:
-- [ ] Write failing canonical test for AC-1
-- [ ] Implement AC-1 (red→green)
-- [ ] Write failing canonical test for AC-2
-- [ ] Implement AC-2 (red→green)
-- [ ] Write failing canonical test for AC-3
-- [ ] Implement AC-3 (red→green)
+- [x] Write failing canonical test for AC-1
+- [x] Implement AC-1 (red→green)
+- [x] Write failing canonical test for AC-2
+- [x] Implement AC-2 (red→green)
+- [x] Write failing canonical test for AC-3
+- [x] Implement AC-3 (red→green)
 
 **Blocked by**: None
 **Blocks**: TASK-002, TASK-003, TASK-010, TASK-015
