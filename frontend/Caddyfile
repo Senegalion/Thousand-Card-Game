@@ -1,0 +1,25 @@
+# Production static SPA server (ADR-008). Serves the Vite build from /srv.
+# Listens on :8080 because the container runs as a non-root user and cannot bind :80.
+# TLS termination and the /api and /ws reverse proxy to the backend are added in the
+# Build phase; this file only serves the static bundle.
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	root * /srv
+	encode zstd gzip
+
+	# Vite emits content-hashed file names under /assets, so they can be cached forever.
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	# index.html must be revalidated so a new deploy is picked up immediately.
+	@html path / /index.html
+	header @html Cache-Control "no-cache"
+
+	# SPA fallback: unknown paths resolve to index.html for client-side routing.
+	try_files {path} /index.html
+	file_server
+}
