@@ -1,4 +1,3 @@
-@AGENTS.md
 
 # Thousand Online
 

@@ -1,0 +1,30 @@
+# The root build context is used for the backend image only; the frontend has its own context.
+.git
+.gitignore
+.github
+.idea
+.vscode
+*.swp
+.DS_Store
+
+# Frontend is built from ./frontend with frontend/.dockerignore
+frontend
+
+# Build output and caches
+**/target
+**/node_modules
+coverage
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+secrets
+
+# Docs and ProdReady artifacts
+*.md
+.prodready
+.claude
+docs
+tests
+thousand-backend
