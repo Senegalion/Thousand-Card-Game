@@ -1,12 +1,12 @@
-# Thousand Online - development targets (Scaffold phase).
-# Production targets (prod-up, prod-down, prod-logs) are added in the Build phase.
+# Thousand Online - development and production Compose targets.
 # Everything runs inside containers; only Docker and make are required on the host.
 
 COMPOSE := docker compose
+COMPOSE_PROD := docker compose -f compose.yaml -f compose.prod.yaml
 BACKEND := $(COMPOSE) run --rm --no-deps backend
 FRONTEND := $(COMPOSE) run --rm --no-deps frontend
 
-.PHONY: help env dev dev-build down logs ps \
+.PHONY: help env dev dev-build down logs ps config prod-up prod-down prod-logs prod-ps \
         test test-backend test-frontend \
         lint lint-backend lint-frontend format format-backend format-frontend typecheck \
         db-shell clean
@@ -37,6 +37,27 @@ logs: ## Follow logs of all services
 
 ps: ## Show service status
 	$(COMPOSE) ps
+
+config: ## Validate the development and production Compose configuration
+	$(COMPOSE) config --quiet
+	$(COMPOSE_PROD) config --quiet
+	@echo "compose config OK (dev + prod)"
+
+# ===========================================
+# Production stack (compose.yaml + compose.prod.yaml)
+# ===========================================
+
+prod-up: ## Build and start the production stack in the background (frontend on HTTP_PORT, default 8080)
+	$(COMPOSE_PROD) up -d --build
+
+prod-down: ## Stop the production stack
+	$(COMPOSE_PROD) down
+
+prod-logs: ## Follow logs of the production stack
+	$(COMPOSE_PROD) logs -f
+
+prod-ps: ## Show production service status
+	$(COMPOSE_PROD) ps
 
 # ===========================================
 # Testing

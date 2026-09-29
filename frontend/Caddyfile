@@ -1,7 +1,8 @@
 # Production static SPA server (ADR-008). Serves the Vite build from /srv.
 # Listens on :8080 because the container runs as a non-root user and cannot bind :80.
-# TLS termination and the /api and /ws reverse proxy to the backend are added in the
-# Build phase; this file only serves the static bundle.
+# Serves the static bundle and proxies /api and /ws to the backend on the internal
+# Compose network, so the browser sees a single origin. Actuator is not routed.
+# TLS termination is added in the Build phase.
 {
 	admin off
 	auto_https off
@@ -10,6 +11,12 @@
 :8080 {
 	root * /srv
 	encode zstd gzip
+
+	# The backend host only resolves inside the Compose network (compose.prod.yaml).
+	@backend path /api/* /ws /ws/*
+	handle @backend {
+		reverse_proxy backend:8080
+	}
 
 	# Vite emits content-hashed file names under /assets, so they can be cached forever.
 	@hashed path /assets/*
@@ -20,6 +27,9 @@
 	header @html Cache-Control "no-cache"
 
 	# SPA fallback: unknown paths resolve to index.html for client-side routing.
-	try_files {path} /index.html
-	file_server
+	# Wrapped in handle so try_files never rewrites /api or /ws requests.
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
 }
