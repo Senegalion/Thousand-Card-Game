@@ -473,7 +473,7 @@ AC-3: Given a round that ends, when the next round is dealt, then the dealer is 
 ---
 
 ### TASK-019: Game domain: PlayerView projection and hidden information
-**Priority**: P0 | **Estimate**: 3h | **Status**: Ready | **Owner**: dev
+**Priority**: P0 | **Estimate**: 3h | **Status**: Done | **Owner**: dev
 
 **Description**:
 project(state, seat); jqwik property: no hidden card ever appears in another seat's view.
@@ -484,8 +484,8 @@ project(state, seat); jqwik property: no hidden card ever appears in another sea
 AC-1: Given a dealt round, when a player's client receives the game state, then it contains only that player's own cards and not other hands or the musik contents (hidden information). [US-011 AC-4]
 
 **TDD Tasks**:
-- [ ] Write failing canonical test for AC-1
-- [ ] Implement AC-1 (red→green)
+- [x] Write failing canonical test for AC-1
+- [x] Implement AC-1 (red→green)
 
 **Blocked by**: TASK-018
 **Blocks**: TASK-021

@@ -29,6 +29,7 @@
     <properties>
         <java.version>25</java.version>
         <archunit.version>1.4.2</archunit.version>
+        <jqwik.version>1.9.3</jqwik.version>
     </properties>
     <dependencies>
         <dependency>
@@ -70,6 +71,13 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
             <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Property-based tests for game-domain invariants (tech-stack.md). -->
+        <dependency>
+            <groupId>net.jqwik</groupId>
+            <artifactId>jqwik</artifactId>
+            <version>${jqwik.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
