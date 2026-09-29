@@ -10,6 +10,12 @@ COUNTER_FILE="${TMPDIR:-/tmp}/claude-test-after-edit-${SESSION_ID:-unknown}.coun
 
 cd "$CLAUDE_PROJECT_DIR/backend" || exit 1
 
+# The project requires JDK 25; don't rely on the JAVA_HOME inherited from the session
+if JDK25_HOME=$(/usr/libexec/java_home -v 25 2>/dev/null); then
+  export JAVA_HOME="$JDK25_HOME"
+  export PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 OUTPUT=$(./mvnw test 2>&1)
 EXIT_CODE=$?
 

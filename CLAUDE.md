@@ -1,3 +1,4 @@
+
 # Thousand Online
 
 ## Project
@@ -36,11 +37,11 @@ The backend is always authoritative for game state, game rules, authentication, 
 ### Backend
 
 - Java 25
-- Spring Boot 4.x
+- Spring Boot 4.1.x
 - Maven
 - REST
 - WebSocket with STOMP
-- Spring Security
+- Spring Security with server-side sessions (Spring Session JDBC), no JWT (ADR-003)
 
 ### Persistence
 
@@ -51,7 +52,7 @@ The backend is always authoritative for game state, game rules, authentication, 
 
 ### Infrastructure
 
-- Redis for justified ephemeral/realtime use cases
+- Redis for justified ephemeral/realtime use cases (deferred, not part of the MVP stack; see ADR-007)
 - Docker
 - Docker Compose
 

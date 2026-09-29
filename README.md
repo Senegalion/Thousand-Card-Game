@@ -5,8 +5,8 @@ Online multiplayer implementation of the Polish card game Tysiąc.
 ## Tech stack
 
 ### Backend
-- Java 21
-- Spring Boot 3
+- Java 25
+- Spring Boot 4.1.x
 - Maven
 - JUnit 5
 

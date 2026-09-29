@@ -5,13 +5,13 @@
 The backend uses:
 
 - Java 25
-- Spring Boot 4.x
+- Spring Boot 4.1.x
 - Maven
 - PostgreSQL
 - jOOQ
 - Flyway
-- Redis
 - Spring Security
+- Spring Session JDBC (server-side sessions in PostgreSQL)
 - REST
 - WebSocket with STOMP
 
@@ -83,9 +83,9 @@ Keep persistence concerns separate from the domain model where appropriate.
 
 ## Redis
 
-Redis is not the primary persistent database.
+Redis is deferred and is not part of the MVP stack (ADR-007). The single application instance keeps live match state in memory, backed by PostgreSQL snapshots (ADR-004). Sessions are stored in PostgreSQL (ADR-003), and rate limiting runs in memory.
 
-Use Redis only for justified ephemeral/realtime concerns such as:
+Reintroducing Redis requires a new ADR, typically when a second application instance becomes necessary. Redis would never be the primary persistent database. Candidate concerns at that point:
 
 - active room state
 - player presence
@@ -132,7 +132,7 @@ Consider reconnects, duplicate messages, stale clients, and concurrent actions w
 
 Use Spring Security.
 
-Use JWT-based authentication where appropriate.
+Use server-side sessions with Spring Session JDBC stored in PostgreSQL, carried in an HttpOnly, Secure, SameSite=Strict cookie, with CSRF protection. Do not use JWT (ADR-003).
 
 Never trust frontend authorization decisions.
 
@@ -144,7 +144,7 @@ Never commit or log secrets, credentials, passwords, or tokens.
 
 Prefer fast unit tests for the domain.
 
-Infrastructure-dependent tests should use Testcontainers with real PostgreSQL and Redis where appropriate.
+Infrastructure-dependent tests should use Testcontainers with real PostgreSQL.
 
 Important boundaries should have integration tests.
 

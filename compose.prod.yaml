@@ -1,0 +1,38 @@
+# Production overlay (ADR-008). Use together with the base file only, never with
+# compose.override.yaml:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d
+# Images are built from the production stages, no source is bind-mounted, every service
+# restarts automatically and has a memory limit. Only Caddy (frontend) publishes a port;
+# the backend and the database stay on the internal Compose network.
+# TLS (Let's Encrypt on :80/:443) and the observability stack are added in the Build phase.
+
+services:
+  backend:
+    build:
+      target: runner
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 768M
+
+  frontend:
+    build:
+      target: production
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 64M
+
+  db:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M

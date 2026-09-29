@@ -1,0 +1,41 @@
+# Development overrides (loaded automatically by `docker compose up`).
+# Source is bind-mounted. The backend runs via spring-boot:run with devtools; the
+# frontend runs the Vite dev server, which proxies /api and /ws to the backend so the
+# browser sees a single origin, as in production (ADR-008).
+
+services:
+  backend:
+    build:
+      target: dev
+    image: thousand-backend-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/workspace/backend
+      - backend_target:/workspace/backend/target
+      - maven_repo:/root/.m2
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+
+  frontend:
+    build:
+      target: dev
+    image: thousand-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    environment:
+      VITE_BACKEND_URL: http://backend:8080
+
+  db:
+    ports:
+      - "5432:5432"
+    healthcheck:
+      interval: 5s
+
+volumes:
+  backend_target:
+  maven_repo:
+  frontend_node_modules:

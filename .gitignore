@@ -1,2 +1,19 @@
 .DS_Store
 .idea/
+
+# Environment and secrets (never commit; see .env.example)
+.env
+.env.*
+!.env.example
+secrets/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Claude Code sandbox write-tracking directories
+**/.claude/.cc-writes/
+
+# jqwik failure database (property-test shrinking cache)
+.jqwik-database
