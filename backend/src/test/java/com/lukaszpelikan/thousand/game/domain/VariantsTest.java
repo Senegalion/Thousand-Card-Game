@@ -69,7 +69,7 @@ class VariantsTest {
     @Test
     @DisplayName("AC-2: returns the configuration when every option required by the player count is set")
     void ac2_returnsConfigurationWhenRequiredOptionsAreSet() {
-        RuleOptions options = allSet();
+        RuleOptions options = TestRuleOptions.allSet();
 
         VariantConfig config = Variants.forPlayerCount(3, options);
 
@@ -126,28 +126,7 @@ class VariantsTest {
     @ValueSource(ints = {1, 5})
     @DisplayName("rejects a player count other than 2, 3 or 4")
     void rejectsUnsupportedPlayerCount(int playerCount) {
-        assertThatIllegalArgumentException().isThrownBy(() -> Variants.forPlayerCount(playerCount, allSet()));
-    }
-
-    private static RuleOptions allSet() {
-        return new RuleOptions(
-                SittingOutPolicy.DEALER,
-                FourPlayerDealLayout.SEVEN_EACH_AND_MUSIK_OF_THREE,
-                RedealProcedure.BEFORE_BIDDING_NEXT_DEALER,
-                Permission.ALLOWED,
-                Permission.ALLOWED,
-                UnchosenMusikVisibility.REVEALED_AFTER_ROUND,
-                FourPlayerMusikProcedure.REVEAL_TAKE_GIVE_ONE_EACH,
-                FinalContractCap.NONE,
-                FreeBombScope.PER_GAME,
-                BombDecisionPoint.EITHER,
-                YesNo.NO,
-                YesNo.NO,
-                YesNo.YES,
-                VoidSuitObligation.MUST_TRUMP,
-                YesNo.NO,
-                Permission.ALLOWED,
-                NegativeScores.ALLOWED,
-                YesNo.YES);
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> Variants.forPlayerCount(playerCount, TestRuleOptions.allSet()));
     }
 }

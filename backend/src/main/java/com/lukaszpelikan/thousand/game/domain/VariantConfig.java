@@ -22,4 +22,15 @@ public record VariantConfig(int playerCount, RuleOptions rules) {
             throw new UnverifiedRuleException(playerCount, unset);
         }
     }
+
+    /** How the cards are dealt (R-020, R-021). */
+    public DealLayout dealLayout() {
+        return switch (playerCount) {
+            case 2 -> new DealLayout(10, List.of(2, 2));
+            case 3 -> new DealLayout(7, List.of(3));
+            default ->
+                throw new IllegalStateException(
+                        "The 4-player deal depends on C-01 and C-02 and is not implemented yet (TASK-036)");
+        };
+    }
 }
