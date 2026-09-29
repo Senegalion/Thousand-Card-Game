@@ -395,7 +395,7 @@ AC-3: Given the domain/game module, when CI reports coverage, then line coverage
 ---
 
 ### TASK-016: Game domain: cards, deck, strength, points, marriage values
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready | **Owner**: dev
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done | **Owner**: dev
 
 **Description**:
 R-001..R-005.
@@ -409,14 +409,14 @@ AC-3: Given all 24 cards, when their point values are summed, then the total is 
 AC-4: Given each suit, when its marriage value is read, then it is ♥ 100, ♦ 80, ♣ 60, ♠ 40 (R-004) [technical]
 
 **TDD Tasks**:
-- [ ] Write failing canonical test for AC-1
-- [ ] Implement AC-1 (red→green)
-- [ ] Write failing canonical test for AC-2
-- [ ] Implement AC-2 (red→green)
-- [ ] Write failing canonical test for AC-3
-- [ ] Implement AC-3 (red→green)
-- [ ] Write failing canonical test for AC-4
-- [ ] Implement AC-4 (red→green)
+- [x] Write failing canonical test for AC-1
+- [x] Implement AC-1 (red→green)
+- [x] Write failing canonical test for AC-2
+- [x] Implement AC-2 (red→green)
+- [x] Write failing canonical test for AC-3
+- [x] Implement AC-3 (red→green)
+- [x] Write failing canonical test for AC-4
+- [x] Implement AC-4 (red→green)
 
 **Blocked by**: TASK-002
 **Blocks**: TASK-017
