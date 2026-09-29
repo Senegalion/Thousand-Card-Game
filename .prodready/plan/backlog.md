@@ -424,7 +424,7 @@ AC-4: Given each suit, when its marriage value is read, then it is ♥ 100, ♦ 
 ---
 
 ### TASK-017: Game domain: VariantConfig and fail-fast on unverified rules
-**Priority**: P0 | **Estimate**: 2h | **Status**: Ready | **Owner**: dev
+**Priority**: P0 | **Estimate**: 2h | **Status**: Done | **Owner**: dev
 
 **Description**:
 ADR-006: VariantConfig per player count, RuleOptions with one nullable field per CONFIRM item.
@@ -436,10 +436,10 @@ AC-1: Given a player count with at least one required rule option unset, when Va
 AC-2: Given a player count whose required options are all set, when Variants.forPlayerCount is called, then it returns the configuration for that count [technical]
 
 **TDD Tasks**:
-- [ ] Write failing canonical test for AC-1
-- [ ] Implement AC-1 (red→green)
-- [ ] Write failing canonical test for AC-2
-- [ ] Implement AC-2 (red→green)
+- [x] Write failing canonical test for AC-1
+- [x] Implement AC-1 (red→green)
+- [x] Write failing canonical test for AC-2
+- [x] Implement AC-2 (red→green)
 
 **Blocked by**: TASK-016
 **Blocks**: TASK-018, TASK-053
